@@ -1,111 +1,176 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { toast } from '../utils/notifications';
+import { useEffect, useReducer } from 'react';
+import {
+  getProfile,
+  loginUser,
+  registerUser,
+  updateProfile as persistProfile,
+} from '../services/authService.js';
+import { AuthContext } from './auth-context.js';
+import { toast } from '../utils/notifications.js';
 
-const AuthContext = createContext();
+const SESSION_KEY = 'apniskill_session';
 
-const authReducer = (state, action) => {
+const initialState = {
+  user: null,
+  token: null,
+  isAuthenticated: false,
+  loading: true,
+  error: null,
+};
+
+function authReducer(state, action) {
   switch (action.type) {
-    case 'LOGIN_SUCCESS':
+    case 'AUTH_START':
+      return { ...state, loading: true, error: null };
+    case 'AUTH_SUCCESS':
       return {
         ...state,
         user: action.payload.user,
         token: action.payload.token,
         isAuthenticated: true,
         loading: false,
+        error: null,
       };
-    case 'LOGOUT':
+    case 'PROFILE_UPDATED':
       return {
         ...state,
-        user: null,
-        token: null,
-        isAuthenticated: false,
+        user: action.payload,
+      };
+    case 'AUTH_ERROR':
+      return {
+        ...state,
+        loading: false,
+        error: action.payload,
+      };
+    case 'AUTH_RESET':
+      return {
+        ...initialState,
         loading: false,
       };
-    case 'LOADING':
-      return { ...state, loading: true };
-    case 'ERROR':
-      return { ...state, error: action.payload, loading: false };
     default:
       return state;
   }
-};
+}
 
-export const AuthProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(authReducer, {
-    user: null,
-    token: null,
-    isAuthenticated: false,
-    loading: true,
-    error: null,
-  });
+function saveSession(session) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+
+function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
+}
+
+export function AuthProvider({ children }) {
+  const [state, dispatch] = useReducer(authReducer, initialState);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    if (token && user) {
-      dispatch({
-        type: 'LOGIN_SUCCESS',
-        payload: { token, user: JSON.parse(user) },
-      });
-    } else {
-      dispatch({ type: 'LOGOUT' });
+    let isMounted = true;
+
+    async function restoreSession() {
+      const rawSession = localStorage.getItem(SESSION_KEY);
+
+      if (!rawSession) {
+        dispatch({ type: 'AUTH_RESET' });
+        return;
+      }
+
+      dispatch({ type: 'AUTH_START' });
+
+      try {
+        const session = JSON.parse(rawSession);
+        const profile = await getProfile(session.token, session.user);
+
+        if (!isMounted) {
+          return;
+        }
+
+        const nextSession = { token: session.token, user: profile };
+        saveSession(nextSession);
+        dispatch({
+          type: 'AUTH_SUCCESS',
+          payload: nextSession,
+        });
+      } catch (error) {
+        clearSession();
+
+        if (!isMounted) {
+          return;
+        }
+
+        dispatch({ type: 'AUTH_ERROR', payload: error.message || 'Session restore failed.' });
+        dispatch({ type: 'AUTH_RESET' });
+      }
     }
+
+    restoreSession();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const login = async (email) => {
-    dispatch({ type: 'LOADING' });
+  const login = async (email, password) => {
+    dispatch({ type: 'AUTH_START' });
+
     try {
-      // Mock API - replace with real
-      const mockUser = {
-        id: 1,
-        name: 'John Doe',
-        email,
-        skillsOffered: ['React', 'Tailwind'],
-        skillsWanted: ['Node.js', 'Python'],
-      };
-      const token = 'mock-jwt-token-' + Date.now();
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      dispatch({
-        type: 'LOGIN_SUCCESS',
-        payload: { user: mockUser, token },
-      });
-      toast.success('Login successful!');
-  } catch (error) {
-      dispatch({ type: 'ERROR', payload: 'Login failed' });
-      console.error('Login error:', error);
+      const session = await loginUser(email, password);
+      saveSession(session);
+      dispatch({ type: 'AUTH_SUCCESS', payload: session });
+      toast.success(`Welcome back, ${session.user.name.split(' ')[0]}!`);
+      return { ok: true };
+    } catch (error) {
+      const message = error.message || 'Unable to sign in right now.';
+      dispatch({ type: 'AUTH_ERROR', payload: message });
+      toast.error(message);
+      return { ok: false, message };
     }
   };
 
-  const signup = async (name, email) => {
-    dispatch({ type: 'LOADING' });
+  const signup = async (payload) => {
+    dispatch({ type: 'AUTH_START' });
+
     try {
-      const mockUser = {
-        id: Date.now(),
-        name,
-        email,
-        skillsOffered: [],
-        skillsWanted: [],
-      };
-      const token = 'mock-jwt-token-' + Date.now();
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      dispatch({
-        type: 'LOGIN_SUCCESS',
-        payload: { user: mockUser, token },
-      });
-      console.log('Signup successful!');
+      const session = await registerUser(payload);
+      saveSession(session);
+      dispatch({ type: 'AUTH_SUCCESS', payload: session });
+      toast.success(`Account created for ${session.user.name}.`);
+      return { ok: true };
     } catch (error) {
-      dispatch({ type: 'ERROR', payload: 'Signup failed' });
-      console.error('Signup error:', error);
+      const message = error.message || 'Unable to create your account.';
+      dispatch({ type: 'AUTH_ERROR', payload: message });
+      toast.error(message);
+      return { ok: false, message };
+    }
+  };
+
+  const updateUserProfile = async (payload) => {
+    if (!state.token) {
+      const message = 'Please sign in again to update your profile.';
+      toast.error(message);
+      return { ok: false, message };
+    }
+
+    dispatch({ type: 'AUTH_START' });
+
+    try {
+      const updatedUser = await persistProfile(payload, state.token, state.user);
+      const nextSession = { token: state.token, user: updatedUser };
+      saveSession(nextSession);
+      dispatch({ type: 'AUTH_SUCCESS', payload: nextSession });
+      toast.success('Profile updated successfully.');
+      return { ok: true, user: updatedUser };
+    } catch (error) {
+      const message = error.message || 'Unable to save profile changes.';
+      dispatch({ type: 'AUTH_ERROR', payload: message });
+      toast.error(message);
+      return { ok: false, message };
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    dispatch({ type: 'LOGOUT' });
-    console.log('Logged out');
+    clearSession();
+    dispatch({ type: 'AUTH_RESET' });
+    toast.success('You have been logged out.');
   };
 
   const value = {
@@ -113,17 +178,8 @@ export const AuthProvider = ({ children }) => {
     login,
     signup,
     logout,
+    updateUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
-};
-
-
+}
