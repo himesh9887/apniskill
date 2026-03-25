@@ -18,7 +18,7 @@ export default function Dashboard() {
 
     async function loadDashboard() {
       try {
-        const [users, activeMatches] = await Promise.all([
+        const [users, matchData] = await Promise.all([
           getDiscoverUsers(user?.id),
           getMatches(user?.id),
         ]);
@@ -28,7 +28,7 @@ export default function Dashboard() {
         }
 
         setCommunity(users);
-        setMatches(activeMatches);
+        setMatches(matchData);
       } catch (error) {
         toast.error(error.message || 'Unable to load dashboard data.');
       } finally {
@@ -67,9 +67,14 @@ export default function Dashboard() {
     });
   }, [community, search]);
 
+  const activeSwaps = useMemo(
+    () => matches.filter((match) => match.status === 'active').length,
+    [matches],
+  );
+
   async function handleSwapRequest(targetUser) {
     try {
-      const createdMatch = await requestSwap(targetUser);
+      const createdMatch = await requestSwap(targetUser, '', user?.id);
       setMatches((current) => [createdMatch, ...current]);
       toast.success(`Request sent to ${targetUser.name}.`);
     } catch (error) {
@@ -83,36 +88,42 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-10">
-      <section className="grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
-        <div className="glass-card p-6 md:p-8">
-          <p className="section-kicker">Dashboard</p>
-          <h1 className="mt-3 text-4xl font-bold text-white">Welcome back, {user?.name?.split(' ')[0]}.</h1>
-          <p className="mt-4 max-w-2xl text-slate-300">
-            Your profile is visible to learners who want {user?.skillsOffered?.[0] || 'your expertise'}.
-            Start with a match that complements your next skill goal.
-          </p>
+      <section className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
+        <div className="glass-card relative overflow-hidden p-5 sm:p-6 md:p-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.12),transparent_35%)]" />
+          <div className="relative">
+            <p className="section-kicker">Dashboard</p>
+            <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">
+              Welcome back, {user?.name?.split(' ')[0]}.
+            </h1>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
+              Discover people who need the exact skills you already have, then send a clean swap request
+              and continue the conversation in chat.
+            </p>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            <div className="stat-card">
-              <p className="stat-number">{community.length}</p>
-              <p className="stat-label">people available for swaps</p>
-            </div>
-            <div className="stat-card">
-              <p className="stat-number">{matches.length}</p>
-              <p className="stat-label">current match requests</p>
-            </div>
-            <div className="stat-card">
-              <p className="stat-number">{user?.completedSwaps ?? 0}</p>
-              <p className="stat-label">completed exchanges</p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="stat-card">
+                <p className="stat-number">{community.length}</p>
+                <p className="stat-label">people available for swaps</p>
+              </div>
+              <div className="stat-card">
+                <p className="stat-number">{activeSwaps}</p>
+                <p className="stat-label">active swaps in progress</p>
+              </div>
+              <div className="stat-card">
+                <p className="stat-number">{user?.completedSwaps ?? 0}</p>
+                <p className="stat-label">completed exchanges</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <aside className="glass-card p-6">
+        <aside className="glass-card p-5 sm:p-6">
           <div className="flex items-center gap-2 text-sky-300">
             <Sparkles className="h-5 w-5" />
             <h2 className="text-lg font-semibold text-white">Your swap focus</h2>
           </div>
+
           <div className="mt-5 flex flex-wrap gap-2">
             {user?.skillsWanted?.map((skill) => (
               <span key={skill} className="tag tag-wanted">
@@ -120,13 +131,18 @@ export default function Dashboard() {
               </span>
             ))}
           </div>
-          <p className="mt-5 text-sm leading-7 text-slate-300">
-            Strong matches usually happen when your offered skills clearly solve the other person&apos;s immediate need.
-          </p>
+
+          <div className="mt-5 rounded-[28px] border border-white/10 bg-slate-950/45 p-4 sm:p-5">
+            <p className="text-sm font-semibold text-white">What gets faster replies</p>
+            <p className="mt-3 text-sm leading-7 text-slate-300">
+              Send requests to people whose immediate goals match your strongest skill, and keep your
+              headline clear enough that they can trust what you&apos;ll help with.
+            </p>
+          </div>
         </aside>
       </section>
 
-      <section className="glass-card p-5">
+      <section className="glass-card p-4 sm:p-5">
         <div className="grid gap-4 md:grid-cols-[1fr_auto]">
           <label className="input-shell">
             <Search className="input-icon" />
@@ -144,49 +160,25 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <Users className="h-5 w-5 text-sky-300" />
-            <h2 className="text-2xl font-semibold text-white">Suggested community</h2>
-          </div>
-
-          {filteredUsers.length ? (
-            <div className="grid gap-6 xl:grid-cols-2">
-              {filteredUsers.map((person) => (
-                <SkillCard key={person.id} user={person} onSwapRequest={handleSwapRequest} />
-              ))}
-            </div>
-          ) : (
-            <div className="glass-card p-8 text-center">
-              <LayoutDashboard className="mx-auto h-10 w-10 text-sky-300" />
-              <p className="mt-4 text-lg text-white">No matches for that search yet.</p>
-              <p className="mt-2 text-sm text-slate-400">Try a city, a skill name, or remove some filters.</p>
-            </div>
-          )}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3">
+          <Users className="h-5 w-5 text-sky-300" />
+          <h2 className="text-2xl font-semibold text-white">Suggested community</h2>
         </div>
 
-        <aside className="space-y-6">
-          <div className="glass-card p-6">
-            <h3 className="text-xl font-semibold text-white">Active requests</h3>
-            <div className="mt-5 space-y-4">
-              {matches.map((match) => (
-                <div key={match.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-medium text-white">{match.user?.name || 'Pending match'}</p>
-                      <p className="text-sm text-slate-400">{match.note}</p>
-                    </div>
-                    <span className="rounded-full bg-sky-300/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-sky-200">
-                      {match.status}
-                    </span>
-                  </div>
-                  <p className="mt-3 text-sm text-slate-300">Compatibility score: {match.compatibility ?? 88}%</p>
-                </div>
-              ))}
-            </div>
+        {filteredUsers.length ? (
+          <div className="grid gap-5 sm:gap-6 xl:grid-cols-2">
+            {filteredUsers.map((person) => (
+              <SkillCard key={person.id} user={person} onSwapRequest={handleSwapRequest} />
+            ))}
           </div>
-        </aside>
+        ) : (
+          <div className="glass-card p-8 text-center">
+            <LayoutDashboard className="mx-auto h-10 w-10 text-sky-300" />
+            <p className="mt-4 text-lg text-white">No matches for that search yet.</p>
+            <p className="mt-2 text-sm text-slate-400">Try a city, a skill name, or remove some filters.</p>
+          </div>
+        )}
       </section>
     </div>
   );

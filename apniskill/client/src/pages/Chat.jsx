@@ -8,11 +8,31 @@ import { toast } from '../utils/notifications.js';
 
 export default function Chat() {
   const { user } = useAuth();
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window === 'undefined' ? true : window.innerWidth >= 1024,
+  );
   const [conversations, setConversations] = useState([]);
   const [selectedConversationId, setSelectedConversationId] = useState('');
   const [messageText, setMessageText] = useState('');
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    function handleResize() {
+      setIsDesktop(window.innerWidth >= 1024);
+    }
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -26,7 +46,7 @@ export default function Chat() {
         }
 
         setConversations(data);
-        setSelectedConversationId(data[0]?.id || '');
+        setSelectedConversationId((current) => current || (isDesktop ? data[0]?.id || '' : ''));
       } catch (error) {
         toast.error(error.message || 'Unable to load chats.');
       } finally {
@@ -41,7 +61,13 @@ export default function Chat() {
     return () => {
       isMounted = false;
     };
-  }, [user?.id]);
+  }, [isDesktop, user?.id]);
+
+  useEffect(() => {
+    if (isDesktop && conversations.length && !selectedConversationId) {
+      setSelectedConversationId(conversations[0].id);
+    }
+  }, [conversations, isDesktop, selectedConversationId]);
 
   const filteredConversations = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -87,9 +113,11 @@ export default function Chat() {
   }
 
   return (
-    <section className="grid gap-6 lg:grid-cols-[0.42fr_0.58fr]">
-      <aside className="glass-card overflow-hidden">
-        <div className="border-b border-white/10 p-5">
+    <section className="grid gap-4 lg:h-[calc(100dvh-8.5rem)] lg:grid-cols-[0.42fr_0.58fr] lg:gap-6 lg:overflow-hidden">
+      <aside
+        className={`glass-card overflow-hidden lg:flex lg:h-full lg:min-h-0 lg:flex-col ${selectedConversation && !isDesktop ? 'hidden' : 'block'}`}
+      >
+        <div className="border-b border-white/10 p-4 sm:p-5">
           <p className="section-kicker">Messages</p>
           <h1 className="mt-3 text-2xl font-semibold text-white">Continue your swaps</h1>
 
@@ -104,7 +132,7 @@ export default function Chat() {
           </label>
         </div>
 
-        <div className="max-h-[620px] space-y-2 overflow-y-auto p-3">
+        <div className="max-h-[70vh] space-y-2 overflow-y-auto p-3 lg:min-h-0 lg:flex-1 lg:space-y-3 lg:pr-2">
           {filteredConversations.map((conversation) => {
             const lastMessage = conversation.messages?.[conversation.messages.length - 1];
             const isActive = conversation.id === selectedConversationId;
@@ -120,9 +148,14 @@ export default function Chat() {
                     : 'border-white/5 bg-white/5 hover:border-white/10 hover:bg-white/8'
                 }`}
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="font-medium text-white">{conversation.participant?.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-white">{conversation.participant?.name}</p>
+                      {conversation.hasUnread ? (
+                        <span className="inline-flex h-2.5 w-2.5 rounded-full bg-amber-300" />
+                      ) : null}
+                    </div>
                     <p className="mt-1 text-sm text-slate-400">{conversation.participant?.headline}</p>
                   </div>
                   <span className="text-xs text-slate-500">{formatDate(lastMessage?.createdAt)}</span>
@@ -134,22 +167,37 @@ export default function Chat() {
         </div>
       </aside>
 
-      <div className="glass-card flex min-h-[620px] flex-col overflow-hidden">
+      <div
+        className={`glass-card ${selectedConversation || isDesktop ? 'flex' : 'hidden'} min-h-[520px] flex-col overflow-hidden lg:h-full lg:min-h-0`}
+      >
         {selectedConversation ? (
           <>
-            <div className="border-b border-white/10 p-5">
-              <p className="text-xl font-semibold text-white">{selectedConversation.participant?.name}</p>
-              <p className="mt-1 text-sm text-slate-400">{selectedConversation.participant?.headline}</p>
+            <div className="border-b border-white/10 p-4 sm:p-5">
+              <div className="flex items-start gap-3">
+                {!isDesktop ? (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedConversationId('')}
+                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white"
+                  >
+                    Back
+                  </button>
+                ) : null}
+                <div className="min-w-0">
+                  <p className="text-xl font-semibold text-white">{selectedConversation.participant?.name}</p>
+                  <p className="mt-1 text-sm text-slate-400">{selectedConversation.participant?.headline}</p>
+                </div>
+              </div>
             </div>
 
-            <div className="flex-1 space-y-4 overflow-y-auto p-5">
+            <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-5 lg:min-h-0 lg:pr-3">
               {selectedConversation.messages?.map((message) => {
                 const isOwn = message.senderId === user?.id;
 
                 return (
                   <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
                     <div
-                      className={`max-w-[78%] rounded-3xl px-4 py-3 ${
+                      className={`max-w-[88%] rounded-3xl px-4 py-3 sm:max-w-[78%] ${
                         isOwn
                           ? 'bg-gradient-to-r from-sky-400 to-cyan-300 text-slate-950'
                           : 'border border-white/10 bg-white/5 text-slate-100'
@@ -165,8 +213,8 @@ export default function Chat() {
               })}
             </div>
 
-            <form className="border-t border-white/10 p-5" onSubmit={handleSendMessage}>
-              <div className="input-shell">
+            <form className="border-t border-white/10 p-4 sm:p-5" onSubmit={handleSendMessage}>
+              <div className="input-shell rounded-[28px] pr-2">
                 <MessageCircleMore className="input-icon" />
                 <input
                   value={messageText}
@@ -175,7 +223,7 @@ export default function Chat() {
                 />
                 <button
                   type="submit"
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-300 text-slate-950"
+                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-300 text-slate-950"
                 >
                   <SendHorizontal className="h-4 w-4" />
                 </button>

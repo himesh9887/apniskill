@@ -7,6 +7,7 @@ import Signup from './pages/Signup.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Profile from './pages/Profile.jsx';
 import Chat from './pages/Chat.jsx';
+import Requests from './pages/Requests.jsx';
 import Loader from './components/Loader.jsx';
 
 function ProtectedRoute({ children }) {
@@ -40,6 +41,11 @@ function App() {
         <Route path="chat" element={
           <ProtectedRoute>
             <Chat />
+          </ProtectedRoute>
+        } />
+        <Route path="requests" element={
+          <ProtectedRoute>
+            <Requests />
           </ProtectedRoute>
         } />
         <Route path="*" element={<Navigate to="/" replace />} />

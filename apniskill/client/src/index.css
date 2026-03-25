@@ -9,6 +9,14 @@
 
 * {
   box-sizing: border-box;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 html {
@@ -21,6 +29,7 @@ body {
   min-height: 100vh;
   background: #020617;
   color: #f8fafc;
+  overflow-x: hidden;
 }
 
 button,
@@ -59,15 +68,15 @@ textarea::placeholder {
 
 @layer components {
   .glass-card {
-    @apply rounded-[30px] border border-white/10 bg-white/6 shadow-[0_20px_60px_rgba(2,6,23,0.28)] backdrop-blur-xl;
+    @apply rounded-[24px] border border-white/10 bg-white/6 shadow-[0_20px_60px_rgba(2,6,23,0.28)] backdrop-blur-xl sm:rounded-[30px];
   }
 
   .btn-primary {
-    @apply inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-300 via-cyan-300 to-amber-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(56,189,248,0.28)];
+    @apply inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-300 via-cyan-300 to-amber-300 px-5 py-3 text-center text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(56,189,248,0.28)] sm:w-auto;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-5 py-3 text-sm font-medium text-white transition hover:border-white/20 hover:bg-white/10;
+    @apply inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/6 px-5 py-3 text-center text-sm font-medium text-white transition hover:border-white/20 hover:bg-white/10 sm:w-auto;
   }
 
   .field {
@@ -80,11 +89,11 @@ textarea::placeholder {
 
   .field textarea,
   .field select {
-    @apply rounded-3xl border border-white/10 bg-slate-950/55 px-4 py-3 text-sm text-white transition focus:border-sky-300/35 focus:bg-slate-950;
+    @apply rounded-3xl border border-white/10 bg-slate-950/55 px-4 py-3 text-sm text-white transition focus:border-sky-300/35 focus:bg-slate-950 sm:text-base;
   }
 
   .input-shell {
-    @apply flex items-center gap-3 rounded-full border border-white/10 bg-slate-950/55 px-4 py-3 text-sm transition focus-within:border-sky-300/35 focus-within:bg-slate-950;
+    @apply flex min-w-0 items-center gap-3 rounded-full border border-white/10 bg-slate-950/55 px-4 py-3 text-sm transition focus-within:border-sky-300/35 focus-within:bg-slate-950 sm:text-base;
   }
 
   .input-icon {
@@ -104,11 +113,11 @@ textarea::placeholder {
   }
 
   .section-kicker {
-    @apply text-sm font-semibold uppercase tracking-[0.24em] text-sky-300;
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-sky-300 sm:text-sm sm:tracking-[0.24em];
   }
 
   .section-title {
-    @apply text-3xl font-semibold text-white md:text-4xl;
+    @apply text-2xl font-semibold text-white sm:text-3xl md:text-4xl;
   }
 
   .section-copy {
@@ -120,7 +129,7 @@ textarea::placeholder {
   }
 
   .stat-number {
-    @apply text-3xl font-black text-white;
+    @apply text-2xl font-black text-white sm:text-3xl;
   }
 
   .stat-label {

@@ -42,10 +42,10 @@ export default function Profile() {
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr]">
-      <aside className="glass-card p-6">
+    <div className="grid gap-6 lg:grid-cols-[0.72fr_1.28fr] lg:gap-8">
+      <aside className="glass-card order-2 p-5 sm:p-6 lg:order-1">
         <p className="section-kicker">Profile snapshot</p>
-        <h1 className="mt-3 text-3xl font-semibold text-white">{user?.name}</h1>
+        <h1 className="mt-3 text-2xl font-semibold text-white sm:text-3xl">{user?.name}</h1>
         <p className="mt-2 text-slate-400">{user?.headline}</p>
 
         <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-5">
@@ -77,9 +77,9 @@ export default function Profile() {
         </div>
       </aside>
 
-      <section className="glass-card p-6 md:p-8">
+      <section className="glass-card order-1 p-5 sm:p-6 md:p-8 lg:order-2">
         <p className="section-kicker">Edit profile</p>
-        <h2 className="mt-3 text-3xl font-semibold text-white">Keep your profile practical and easy to match.</h2>
+        <h2 className="mt-3 text-2xl font-semibold text-white sm:text-3xl">Keep your profile practical and easy to match.</h2>
 
         <form className="mt-8 grid gap-5 md:grid-cols-2" onSubmit={handleSubmit}>
           <label className="field">

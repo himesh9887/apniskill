@@ -36,10 +36,10 @@ export default function Signup() {
 
   return (
     <section className="mx-auto max-w-5xl">
-      <div className="glass-card p-6 md:p-10">
+      <div className="glass-card p-5 sm:p-6 md:p-10">
         <div className="max-w-3xl">
           <p className="section-kicker">Create your profile</p>
-          <h1 className="mt-3 text-4xl font-bold text-white">
+          <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">
             Tell the community what you can teach and what you want to learn.
           </h1>
           <p className="mt-4 text-slate-300">

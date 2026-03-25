@@ -75,17 +75,30 @@ export const defaultCurrentUser = {
 export const demoMatches = [
   {
     id: 'match-priya',
-    userId: 'user-priya',
+    requesterId: 'user-demo',
+    targetUserId: 'user-priya',
     status: 'active',
     compatibility: 92,
     note: 'Priya can help you level up your React components.',
+    createdAt: '2026-03-22T14:00:00.000Z',
   },
   {
     id: 'match-rahul',
-    userId: 'user-rahul',
+    requesterId: 'user-demo',
+    targetUserId: 'user-rahul',
     status: 'requested',
     compatibility: 86,
     note: 'Strong backend exchange potential with Rahul.',
+    createdAt: '2026-03-23T11:20:00.000Z',
+  },
+  {
+    id: 'match-anita',
+    requesterId: 'user-anita',
+    targetUserId: 'user-demo',
+    status: 'requested',
+    compatibility: 89,
+    note: 'Anita wants to exchange content strategy help for JavaScript basics.',
+    createdAt: '2026-03-25T06:40:00.000Z',
   },
 ];
 
@@ -93,6 +106,7 @@ export const demoConversations = [
   {
     id: 'chat-priya',
     participantId: 'user-priya',
+    participantIds: ['user-demo', 'user-priya'],
     messages: [
       {
         id: 'msg-priya-1',
@@ -111,6 +125,7 @@ export const demoConversations = [
   {
     id: 'chat-rahul',
     participantId: 'user-rahul',
+    participantIds: ['user-demo', 'user-rahul'],
     messages: [
       {
         id: 'msg-rahul-1',

@@ -30,7 +30,7 @@ export default function Login() {
   }
 
   return (
-    <section className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+    <section className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:gap-8">
       <aside className="glass-card hidden p-8 lg:block">
         <p className="section-kicker">Quick access</p>
         <h1 className="mt-4 text-4xl font-bold text-white">Jump back into your next skill swap.</h1>
@@ -52,9 +52,9 @@ export default function Login() {
         </div>
       </aside>
 
-      <div className="glass-card p-6 md:p-8">
+      <div className="glass-card p-5 sm:p-6 md:p-8">
         <p className="section-kicker">Welcome back</p>
-        <h2 className="mt-3 text-3xl font-semibold text-white">Login to continue</h2>
+        <h2 className="mt-3 text-2xl font-semibold text-white sm:text-3xl">Login to continue</h2>
         <p className="mt-3 text-slate-300">
           Use the demo account or your own profile. The app will keep the session locally even if the backend is offline.
         </p>

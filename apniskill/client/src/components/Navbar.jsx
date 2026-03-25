@@ -1,6 +1,7 @@
-import { createElement, useState } from 'react';
+import { createElement, useMemo, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import {
+  ArrowRightLeft,
   CircleUserRound,
   Home,
   LayoutDashboard,
@@ -12,15 +13,9 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
+import { useNotifications } from '../hooks/useNotifications.js';
 
-const navLinks = [
-  { to: '/', label: 'Home', icon: Home, public: true },
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, public: false },
-  { to: '/profile', label: 'Profile', icon: UserCog, public: false },
-  { to: '/chat', label: 'Chat', icon: MessageCircle, public: false },
-];
-
-function NavItem({ to, label, icon: Icon, onClick }) {
+function NavItem({ to, label, icon: Icon, onClick, badgeCount = 0 }) {
   return (
     <NavLink
       to={to}
@@ -33,8 +28,44 @@ function NavItem({ to, label, icon: Icon, onClick }) {
         }`
       }
     >
-      {createElement(Icon, { className: 'h-4 w-4' })}
-      <span>{label}</span>
+      {({ isActive }) => (
+        <>
+          {createElement(Icon, { className: 'h-4 w-4' })}
+          <span>{label}</span>
+          {badgeCount ? (
+            <span
+              className={`inline-flex min-h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${
+                isActive ? 'bg-slate-950 text-white' : 'bg-amber-300 text-slate-950'
+              }`}
+            >
+              {badgeCount > 9 ? '9+' : badgeCount}
+            </span>
+          ) : null}
+        </>
+      )}
+    </NavLink>
+  );
+}
+
+function QuickIconLink({ to, label, icon, badgeCount = 0 }) {
+  return (
+    <NavLink
+      to={to}
+      aria-label={label}
+      className={({ isActive }) =>
+        `relative inline-flex h-11 w-11 items-center justify-center rounded-full border transition ${
+          isActive
+            ? 'border-sky-300/30 bg-sky-300/12 text-sky-100'
+            : 'border-white/10 bg-white/5 text-white hover:bg-white/10'
+        }`
+      }
+    >
+      {createElement(icon, { className: 'h-5 w-5' })}
+      {badgeCount ? (
+        <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-amber-300 px-1.5 text-[11px] font-bold text-slate-950">
+          {badgeCount > 9 ? '9+' : badgeCount}
+        </span>
+      ) : null}
     </NavLink>
   );
 }
@@ -43,9 +74,28 @@ export default function Navbar() {
   const MotionDiv = motion.div;
   const [isOpen, setIsOpen] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
+  const { unreadMessages, incomingRequests } = useNotifications();
   const navigate = useNavigate();
 
-  const visibleLinks = navLinks.filter((link) => link.public || isAuthenticated);
+  const visibleLinks = useMemo(() => {
+    const links = [{ to: '/', label: 'Home', icon: Home, public: true, badgeCount: 0 }];
+
+    if (isAuthenticated) {
+      links.push(
+        { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, public: false, badgeCount: 0 },
+        { to: '/profile', label: 'Profile', icon: UserCog, public: false, badgeCount: 0 },
+        {
+          to: '/chat',
+          label: 'Chat',
+          icon: MessageCircle,
+          public: false,
+          badgeCount: unreadMessages.length,
+        },
+      );
+    }
+
+    return links;
+  }, [isAuthenticated, unreadMessages.length]);
 
   function handleLogout() {
     logout();
@@ -55,14 +105,14 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/70 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 md:px-6">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 via-cyan-300 to-amber-300 text-slate-950 shadow-[0_14px_36px_rgba(56,189,248,0.25)]">
-            <span className="text-lg font-black">AS</span>
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:px-6">
+        <Link to="/" className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 via-cyan-300 to-amber-300 text-slate-950 shadow-[0_14px_36px_rgba(56,189,248,0.25)] sm:h-11 sm:w-11">
+            <span className="text-base font-black sm:text-lg">AS</span>
           </div>
-          <div>
-            <p className="text-lg font-semibold tracking-wide text-white">ApniSkill</p>
-            <p className="text-xs text-slate-400">Swap skills, not invoices</p>
+          <div className="min-w-0">
+            <p className="truncate text-base font-semibold tracking-wide text-white sm:text-lg">ApniSkill</p>
+            <p className="hidden text-xs text-slate-400 sm:block">Swap skills, not invoices</p>
           </div>
         </Link>
 
@@ -73,6 +123,15 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
+          {isAuthenticated ? (
+            <QuickIconLink
+              to="/requests"
+              label="Open requests"
+              icon={ArrowRightLeft}
+              badgeCount={incomingRequests.length}
+            />
+          ) : null}
+
           {isAuthenticated ? (
             <>
               <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-3 py-2">
@@ -101,14 +160,33 @@ export default function Navbar() {
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsOpen((value) => !value)}
-          className="inline-flex rounded-2xl border border-white/10 bg-white/5 p-3 text-white md:hidden"
-          aria-label="Toggle navigation"
-        >
-          {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          {isAuthenticated ? (
+            <>
+              <QuickIconLink
+                to="/chat"
+                label="Open chat"
+                icon={MessageCircle}
+                badgeCount={unreadMessages.length}
+              />
+              <QuickIconLink
+                to="/requests"
+                label="Open requests"
+                icon={ArrowRightLeft}
+                badgeCount={incomingRequests.length}
+              />
+            </>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={() => setIsOpen((value) => !value)}
+            className="inline-flex shrink-0 rounded-2xl border border-white/10 bg-white/5 p-3 text-white"
+            aria-label="Toggle navigation"
+          >
+            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -123,6 +201,16 @@ export default function Navbar() {
               {visibleLinks.map((link) => (
                 <NavItem key={link.to} {...link} onClick={() => setIsOpen(false)} />
               ))}
+
+              {isAuthenticated ? (
+                <NavItem
+                  to="/requests"
+                  label="Requests"
+                  icon={ArrowRightLeft}
+                  badgeCount={incomingRequests.length}
+                  onClick={() => setIsOpen(false)}
+                />
+              ) : null}
 
               {isAuthenticated ? (
                 <button
