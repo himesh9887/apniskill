@@ -10,24 +10,6 @@
 
 * {
   box-sizing: border-box;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.55) transparent;
-}
-
-*::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-*::-webkit-scrollbar-thumb {
-  border: 2px solid transparent;
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.38);
-  background-clip: padding-box;
 }
 
 html {
@@ -184,5 +166,18 @@ textarea::placeholder {
 
   .info-chip {
     @apply inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs font-medium text-slate-200;
+  }
+}
+
+@layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 }

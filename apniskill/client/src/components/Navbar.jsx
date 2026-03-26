@@ -1,5 +1,5 @@
 import { createElement, useMemo, useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   ArrowRightLeft,
   BadgeCheck,
@@ -9,6 +9,7 @@ import {
   LogOut,
   Menu,
   MessageCircle,
+  MessagesSquare,
   UserCog,
   X,
 } from 'lucide-react';
@@ -53,7 +54,21 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
   const { unreadMessages, incomingRequests } = useNotifications();
+  const location = useLocation();
   const navigate = useNavigate();
+  const isChatRoute = location.pathname === '/chat';
+
+  const currentRoute = useMemo(() => {
+    const routeMap = {
+      '/': { label: 'Home', icon: Home },
+      '/dashboard': { label: 'Dashboard', icon: LayoutDashboard },
+      '/profile': { label: 'Profile', icon: UserCog },
+      '/requests': { label: 'Requests', icon: ArrowRightLeft },
+      '/chat': { label: 'Messages', icon: MessagesSquare },
+    };
+
+    return routeMap[location.pathname] || routeMap['/'];
+  }, [location.pathname]);
 
   const visibleLinks = useMemo(() => {
     const links = [{ to: '/', label: 'Home', icon: Home, badgeCount: 0 }];
@@ -77,17 +92,28 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/75 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
-        <Link to="/" className="flex min-w-0 items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 via-sky-300 to-amber-200 text-slate-950 shadow-[0_14px_36px_rgba(34,211,238,0.22)] sm:h-11 sm:w-11">
-            <span className="text-base font-black sm:text-lg">AS</span>
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-base font-semibold tracking-wide text-white sm:text-lg">ApniSkill</p>
-            <p className="hidden text-xs text-slate-400 sm:block">Skill exchange, redesigned for every screen</p>
-          </div>
-        </Link>
+    <header className={`sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl ${isChatRoute ? 'shadow-[0_16px_40px_rgba(2,6,23,0.28)]' : ''}`}>
+      <div className={`mx-auto flex max-w-7xl items-center justify-between gap-3 ${isChatRoute ? 'px-3 py-2.5 sm:px-5 md:px-6 lg:px-8' : 'px-4 py-3 sm:px-5 md:px-6 lg:px-8'}`}>
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <Link to="/" className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 via-sky-300 to-amber-200 text-slate-950 shadow-[0_14px_36px_rgba(34,211,238,0.22)] sm:h-11 sm:w-11">
+              <span className="text-base font-black sm:text-lg">AS</span>
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-base font-semibold tracking-wide text-white sm:text-lg">ApniSkill</p>
+              <p className={`text-xs text-slate-400 ${isChatRoute ? 'hidden lg:block' : 'hidden sm:block'}`}>
+                {isChatRoute ? 'Focused messaging workspace' : 'Skill exchange, redesigned for every screen'}
+              </p>
+            </div>
+          </Link>
+
+          {isAuthenticated ? (
+            <div className={`info-chip ${isChatRoute ? 'inline-flex' : 'hidden md:inline-flex lg:hidden'}`}>
+              {createElement(currentRoute.icon, { className: 'h-4 w-4 text-cyan-200' })}
+              <span>{currentRoute.label}</span>
+            </div>
+          ) : null}
+        </div>
 
         <nav className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] p-1 lg:flex">
           {visibleLinks.map((link) => (
@@ -128,16 +154,16 @@ export default function Navbar() {
 
         <div className="flex items-center gap-2 lg:hidden">
           {isAuthenticated ? (
-            <div className="info-chip hidden sm:inline-flex">
-              <BadgeCheck className="h-4 w-4 text-cyan-200" />
-              <span>{user?.name?.split(' ')[0]}</span>
+            <div className={`info-chip ${isChatRoute ? 'inline-flex max-w-[42vw]' : 'hidden sm:inline-flex'}`}>
+              {createElement(currentRoute.icon, { className: 'h-4 w-4 text-cyan-200' })}
+              <span className="truncate">{isChatRoute ? `${unreadMessages.length} unread` : user?.name?.split(' ')[0]}</span>
             </div>
           ) : null}
 
           <button
             type="button"
             onClick={() => setIsOpen((value) => !value)}
-            className="inline-flex shrink-0 rounded-2xl border border-white/10 bg-white/[0.05] p-3 text-white"
+            className={`inline-flex shrink-0 rounded-2xl border border-white/10 bg-white/[0.05] text-white ${isChatRoute ? 'p-2.5' : 'p-3'}`}
             aria-label="Toggle navigation"
           >
             {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}

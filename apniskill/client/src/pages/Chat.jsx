@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, MessageCircleMore, Search, SendHorizontal, Sparkles } from 'lucide-react';
+import {
+  ArrowLeft,
+  MessageCircleMore,
+  Search,
+  SendHorizontal,
+  Sparkles,
+  Wifi,
+} from 'lucide-react';
 import { useAuth } from '../hooks/useAuth.js';
 import Loader from '../components/Loader.jsx';
 import { getConversations, sendMessage } from '../services/platformService.js';
@@ -120,21 +127,31 @@ export default function Chat() {
   }
 
   return (
-    <section className="grid gap-4 xl:min-h-[74vh] xl:grid-cols-[360px_minmax(0,1fr)] xl:gap-6">
+    <section className="grid h-full min-h-0 gap-0 md:gap-4 xl:grid-cols-[340px_minmax(0,1fr)] xl:gap-5">
       <aside
-        className={`glass-card overflow-hidden ${selectedConversation && !isDesktop ? 'hidden' : 'flex'} min-h-[72vh] flex-col`}
+        className={`${
+          selectedConversation && !isDesktop ? 'hidden' : 'flex'
+        } glass-card min-h-0 h-full flex-col overflow-hidden rounded-none border-x-0 border-y-0 md:rounded-[30px] md:border md:border-white/10`}
       >
-        <div className="border-b border-white/10 p-5 sm:p-6">
+        <div className="border-b border-white/10 p-4 sm:p-5">
           <div className="flex items-center gap-2 text-cyan-200">
             <MessageCircleMore className="h-5 w-5" />
             <p className="section-kicker !text-sm">Messages</p>
           </div>
-          <h1 className="mt-3 font-display text-3xl font-semibold text-white">Continue your swaps</h1>
-          <p className="mt-3 text-sm leading-7 text-slate-300">
-            Pick a conversation and keep the exchange moving without leaving the platform.
-          </p>
+          <div className="mt-3 flex items-start justify-between gap-3">
+            <div>
+              <h1 className="font-display text-2xl font-semibold text-white sm:text-3xl">Continue your swaps</h1>
+              <p className="mt-2 text-sm leading-7 text-slate-300">
+                Pick a conversation and keep the exchange moving without leaving the platform.
+              </p>
+            </div>
+            <span className="info-chip hidden sm:inline-flex">
+              <Wifi className="h-4 w-4 text-cyan-200" />
+              Live inbox
+            </span>
+          </div>
 
-          <label className="input-shell mt-5">
+          <label className="input-shell mt-4">
             <Search className="input-icon" />
             <input
               type="search"
@@ -153,7 +170,7 @@ export default function Chat() {
           </div>
         </div>
 
-        <div className="flex-1 space-y-3 overflow-y-auto p-3 sm:p-4">
+        <div className="hide-scrollbar flex-1 space-y-3 overflow-y-auto p-3 sm:p-4">
           {filteredConversations.length ? (
             filteredConversations.map((conversation) => {
               const lastMessage = conversation.messages?.[conversation.messages.length - 1];
@@ -166,7 +183,7 @@ export default function Chat() {
                   onClick={() => setSelectedConversationId(conversation.id)}
                   className={`w-full rounded-[24px] border p-4 text-left transition ${
                     isActive
-                      ? 'border-cyan-300/30 bg-cyan-300/10'
+                      ? 'border-cyan-300/30 bg-cyan-300/10 shadow-[0_10px_30px_rgba(34,211,238,0.08)]'
                       : 'border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.07]'
                   }`}
                 >
@@ -178,11 +195,11 @@ export default function Chat() {
                           <span className="inline-flex h-2.5 w-2.5 rounded-full bg-amber-200" />
                         ) : null}
                       </div>
-                      <p className="mt-1 text-sm text-slate-400">{conversation.participant?.headline}</p>
+                      <p className="mt-1 line-clamp-2 text-sm text-slate-400">{conversation.participant?.headline}</p>
                     </div>
                     <span className="shrink-0 text-xs text-slate-500">{formatDate(lastMessage?.createdAt)}</span>
                   </div>
-                  <p className="mt-3 text-sm leading-7 text-slate-300">{lastMessage?.text || 'No messages yet.'}</p>
+                  <p className="mt-3 line-clamp-2 text-sm leading-7 text-slate-300">{lastMessage?.text || 'No messages yet.'}</p>
                 </button>
               );
             })
@@ -198,10 +215,14 @@ export default function Chat() {
         </div>
       </aside>
 
-      <div className={`glass-card min-h-[72vh] overflow-hidden ${selectedConversation || isDesktop ? 'flex' : 'hidden'} flex-col`}>
+      <div
+        className={`${
+          selectedConversation || isDesktop ? 'flex' : 'hidden'
+        } glass-card min-h-0 h-full flex-col overflow-hidden rounded-none border-x-0 border-y-0 md:rounded-[30px] md:border md:border-white/10`}
+      >
         {selectedConversation ? (
           <>
-            <div className="border-b border-white/10 p-5 sm:p-6">
+            <div className="border-b border-white/10 p-4 sm:p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-start gap-3">
                   {!isDesktop ? (
@@ -219,10 +240,14 @@ export default function Chat() {
                       {selectedConversation.participant?.name}
                     </p>
                     <p className="mt-1 text-sm text-slate-400">{selectedConversation.participant?.headline}</p>
+                    <div className="mt-3 flex flex-wrap gap-2 sm:hidden">
+                      <span className="info-chip">Focused thread</span>
+                      <span className="info-chip">{selectedConversation.messages?.length || 0} messages</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="hidden flex-wrap gap-2 sm:flex">
                   {(selectedConversation.participant?.skillsOffered || []).slice(0, 2).map((skill) => (
                     <span key={skill} className="tag tag-offered">
                       {skill}
@@ -237,14 +262,14 @@ export default function Chat() {
               </div>
             </div>
 
-            <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-5 lg:p-6">
+            <div className="hide-scrollbar flex-1 space-y-4 overflow-y-auto bg-[linear-gradient(180deg,rgba(255,255,255,0.015),transparent)] p-4 sm:p-5 lg:p-6">
               {selectedConversation.messages?.map((message) => {
                 const isOwn = message.senderId === user?.id;
 
                 return (
                   <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
                     <div
-                      className={`max-w-[90%] rounded-[26px] px-4 py-3 sm:max-w-[78%] ${
+                      className={`max-w-[92%] rounded-[26px] px-4 py-3 shadow-[0_10px_24px_rgba(2,6,23,0.12)] sm:max-w-[78%] ${
                         isOwn
                           ? 'bg-gradient-to-r from-cyan-300 via-sky-300 to-amber-200 text-slate-950'
                           : 'border border-white/10 bg-white/[0.05] text-slate-100'
@@ -261,8 +286,8 @@ export default function Chat() {
               <div ref={messagesEndRef} />
             </div>
 
-            <form className="border-t border-white/10 p-4 sm:p-5" onSubmit={handleSendMessage}>
-              <div className="input-shell rounded-[26px] pr-2">
+            <form className="border-t border-white/10 bg-slate-950/70 p-3 sm:p-4" onSubmit={handleSendMessage}>
+              <div className="input-shell rounded-[26px] border-white/12 bg-white/[0.05] pr-2">
                 <MessageCircleMore className="input-icon" />
                 <input
                   value={messageText}
