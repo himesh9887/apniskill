@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { createElement, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRightLeft,
@@ -59,7 +59,9 @@ function MatchCard({ match, children }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <p className="truncate font-display text-2xl font-semibold text-white">{match.user?.name || 'New learner'}</p>
+              <p className="truncate font-display text-2xl font-semibold text-white">
+                {match.user?.name || 'New learner'}
+              </p>
               <p className="mt-1 text-sm text-slate-400">
                 {match.user?.headline || 'Wants to start a skill exchange with you.'}
               </p>
@@ -126,6 +128,23 @@ function CompactMatchCard({ match, ctaLabel = '', ctaTo = '' }) {
           </Link>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+function SectionHeader({ icon: Icon, title, copy, countLabel }) {
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-start gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-200">
+          {createElement(Icon, { className: 'h-5 w-5' })}
+        </div>
+        <div>
+          <h2 className="text-xl font-semibold text-white">{title}</h2>
+          <p className="mt-1 text-sm text-slate-400">{copy}</p>
+        </div>
+      </div>
+      {countLabel ? <span className="info-chip">{countLabel}</span> : null}
     </div>
   );
 }
@@ -204,176 +223,199 @@ export default function Requests() {
   }
 
   return (
-    <div className="space-y-8">
-      <section className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
+    <div className="space-y-8 sm:space-y-10">
+      <section className="grid gap-5 2xl:grid-cols-[1.05fr_0.95fr]">
         <div className="glass-card relative overflow-hidden p-6 sm:p-8">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.18),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.12),transparent_34%)]" />
           <div className="relative">
             <p className="section-kicker">Requests</p>
-            <h1 className="mt-3 font-display text-3xl font-bold text-white sm:text-4xl">Manage your swap inbox</h1>
+            <h1 className="mt-3 font-display text-3xl font-bold text-white sm:text-4xl">
+              Review, accept, and manage swap requests clearly.
+            </h1>
             <p className="mt-4 max-w-2xl text-sm leading-8 text-slate-300 sm:text-base">
-              Review incoming requests, keep some pending for later, and move accepted exchanges into
-              chat without losing track of what matters.
+              The requests page is now cleaner and easier to scan, so incoming, pending, sent, and
+              active swaps feel separated instead of mixed together.
             </p>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <div className="stat-card">
                 <p className="stat-number">{newRequests.length}</p>
-                <p className="stat-label">new requests waiting</p>
+                <p className="stat-label">new requests</p>
               </div>
               <div className="stat-card">
                 <p className="stat-number">{pendingRequests.length}</p>
-                <p className="stat-label">requests kept pending</p>
+                <p className="stat-label">pending decisions</p>
               </div>
               <div className="stat-card">
                 <p className="stat-number">{sentRequests.length}</p>
-                <p className="stat-label">requests you already sent</p>
+                <p className="stat-label">sent by you</p>
               </div>
               <div className="stat-card">
                 <p className="stat-number">{activeSwaps.length}</p>
-                <p className="stat-label">accepted swaps ready in chat</p>
+                <p className="stat-label">active swaps</p>
               </div>
             </div>
           </div>
         </div>
 
-        <aside className="glass-card p-6">
-          <div className="flex items-center gap-2 text-cyan-200">
-            <Sparkles className="h-5 w-5" />
-            <h2 className="text-lg font-semibold text-white">Decision guide</h2>
+        <aside className="grid gap-5">
+          <div className="glass-card p-6">
+            <div className="flex items-center gap-2 text-cyan-200">
+              <Sparkles className="h-5 w-5" />
+              <h2 className="text-lg font-semibold text-white">Quick decision guide</h2>
+            </div>
+
+            <div className="mt-5 grid gap-3">
+              <div className="rounded-[24px] border border-amber-200/15 bg-amber-200/10 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-100">Accept</p>
+                <p className="mt-2 text-sm leading-7 text-slate-200">
+                  Move the request into an active swap and continue the conversation in chat.
+                </p>
+              </div>
+              <div className="rounded-[24px] border border-white/10 bg-white/[0.05] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-100">Pending</p>
+                <p className="mt-2 text-sm leading-7 text-slate-300">
+                  Keep the request saved here if you want to reply later without losing it.
+                </p>
+              </div>
+              <div className="rounded-[24px] border border-emerald-300/15 bg-emerald-300/10 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">Active</p>
+                <p className="mt-2 text-sm leading-7 text-slate-200">
+                  Accepted requests are ready to continue in the chat workspace.
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-5 grid gap-3">
-            <div className="rounded-[24px] border border-amber-200/15 bg-amber-200/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-100">Accept</p>
-              <p className="mt-2 text-sm leading-7 text-slate-200">
-                Turn the request into an active swap so you can continue the conversation in chat.
-              </p>
-            </div>
-            <div className="rounded-[24px] border border-white/10 bg-white/[0.05] p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-100">Pending</p>
-              <p className="mt-2 text-sm leading-7 text-slate-300">
-                Keep the request visible here if you want to decide later without losing context.
-              </p>
-            </div>
-            <div className="rounded-[24px] border border-emerald-300/15 bg-emerald-300/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">Active swap</p>
-              <p className="mt-2 text-sm leading-7 text-slate-200">
-                Accepted requests appear in the live section and are ready to continue in messages.
-              </p>
+          <div className="glass-card p-6">
+            <p className="section-kicker">Status summary</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+              <div className="panel-card p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Needs reply now</p>
+                <p className="mt-2 font-display text-2xl font-bold text-white">{newRequests.length}</p>
+              </div>
+              <div className="panel-card p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Saved for later</p>
+                <p className="mt-2 font-display text-2xl font-bold text-white">{pendingRequests.length}</p>
+              </div>
+              <div className="panel-card p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Ready to chat</p>
+                <p className="mt-2 font-display text-2xl font-bold text-white">{activeSwaps.length}</p>
+              </div>
             </div>
           </div>
         </aside>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+      <section className="grid gap-6 2xl:grid-cols-[1.08fr_0.92fr]">
         <div className="space-y-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-cyan-200">
-              <Inbox className="h-5 w-5" />
-              <div>
-                <h2 className="text-xl font-semibold text-white">New requests</h2>
-                <p className="mt-1 text-sm text-slate-400">Fresh requests that still need your reply.</p>
-              </div>
+          <div className="glass-card p-5 sm:p-6">
+            <SectionHeader
+              icon={Inbox}
+              title="New requests"
+              copy="Fresh requests that still need your response."
+              countLabel={`${newRequests.length} new`}
+            />
+
+            <div className="mt-5 space-y-4">
+              {newRequests.length ? (
+                newRequests.map((match) => {
+                  const isUpdating = updatingMatchId === match.id;
+
+                  return (
+                    <MatchCard key={match.id} match={match}>
+                      <div className="flex flex-col gap-3 sm:flex-row">
+                        <button
+                          type="button"
+                          className="btn-primary sm:flex-1"
+                          disabled={isUpdating}
+                          onClick={() => handleMatchAction(match.id, 'active')}
+                        >
+                          {isUpdating ? 'Saving...' : 'Accept request'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-secondary sm:flex-1"
+                          disabled={isUpdating}
+                          onClick={() => handleMatchAction(match.id, 'pending')}
+                        >
+                          {isUpdating ? 'Saving...' : 'Keep pending'}
+                        </button>
+                      </div>
+                    </MatchCard>
+                  );
+                })
+              ) : (
+                <div className="rounded-[24px] border border-dashed border-white/12 bg-white/[0.04] p-6 text-center">
+                  <Inbox className="mx-auto h-10 w-10 text-cyan-200" />
+                  <p className="mt-4 text-lg font-semibold text-white">No new requests right now</p>
+                  <p className="mt-2 text-sm leading-7 text-slate-400">
+                    New incoming requests will appear here with quick actions.
+                  </p>
+                </div>
+              )}
             </div>
-
-            {newRequests.length ? (
-              newRequests.map((match) => {
-                const isUpdating = updatingMatchId === match.id;
-
-                return (
-                  <MatchCard key={match.id} match={match}>
-                    <div className="flex flex-col gap-3 sm:flex-row">
-                      <button
-                        type="button"
-                        className="btn-primary sm:flex-1"
-                        disabled={isUpdating}
-                        onClick={() => handleMatchAction(match.id, 'active')}
-                      >
-                        {isUpdating ? 'Saving...' : 'Accept request'}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-secondary sm:flex-1"
-                        disabled={isUpdating}
-                        onClick={() => handleMatchAction(match.id, 'pending')}
-                      >
-                        {isUpdating ? 'Saving...' : 'Keep pending'}
-                      </button>
-                    </div>
-                  </MatchCard>
-                );
-              })
-            ) : (
-              <div className="glass-card p-6 text-center">
-                <Inbox className="mx-auto h-10 w-10 text-cyan-200" />
-                <p className="mt-4 text-lg font-semibold text-white">No new requests right now</p>
-                <p className="mt-2 text-sm leading-7 text-slate-400">
-                  New incoming requests will appear here with quick actions.
-                </p>
-              </div>
-            )}
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-cyan-200">
-              <Clock3 className="h-5 w-5" />
-              <div>
-                <h2 className="text-xl font-semibold text-white">Pending requests</h2>
-                <p className="mt-1 text-sm text-slate-400">Requests you saved to decide a little later.</p>
-              </div>
+          <div className="glass-card p-5 sm:p-6">
+            <SectionHeader
+              icon={Clock3}
+              title="Pending requests"
+              copy="Requests you saved to review a little later."
+              countLabel={`${pendingRequests.length} pending`}
+            />
+
+            <div className="mt-5 space-y-4">
+              {pendingRequests.length ? (
+                pendingRequests.map((match) => {
+                  const isUpdating = updatingMatchId === match.id;
+
+                  return (
+                    <MatchCard key={match.id} match={match}>
+                      <div className="flex flex-col gap-3 sm:flex-row">
+                        <button
+                          type="button"
+                          className="btn-primary sm:flex-1"
+                          disabled={isUpdating}
+                          onClick={() => handleMatchAction(match.id, 'active')}
+                        >
+                          {isUpdating ? 'Saving...' : 'Accept now'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-secondary sm:flex-1"
+                          disabled={isUpdating}
+                          onClick={() => handleMatchAction(match.id, 'pending')}
+                        >
+                          {isUpdating ? 'Saving...' : 'Still pending'}
+                        </button>
+                      </div>
+                    </MatchCard>
+                  );
+                })
+              ) : (
+                <div className="rounded-[24px] border border-dashed border-white/12 bg-white/[0.04] p-6 text-center">
+                  <Clock3 className="mx-auto h-10 w-10 text-slate-300" />
+                  <p className="mt-4 text-lg font-semibold text-white">No pending requests</p>
+                  <p className="mt-2 text-sm leading-7 text-slate-400">
+                    If you keep a request pending, it will stay here until you accept it.
+                  </p>
+                </div>
+              )}
             </div>
-
-            {pendingRequests.length ? (
-              pendingRequests.map((match) => {
-                const isUpdating = updatingMatchId === match.id;
-
-                return (
-                  <MatchCard key={match.id} match={match}>
-                    <div className="flex flex-col gap-3 sm:flex-row">
-                      <button
-                        type="button"
-                        className="btn-primary sm:flex-1"
-                        disabled={isUpdating}
-                        onClick={() => handleMatchAction(match.id, 'active')}
-                      >
-                        {isUpdating ? 'Saving...' : 'Accept now'}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-secondary sm:flex-1"
-                        disabled={isUpdating}
-                        onClick={() => handleMatchAction(match.id, 'pending')}
-                      >
-                        {isUpdating ? 'Saving...' : 'Still pending'}
-                      </button>
-                    </div>
-                  </MatchCard>
-                );
-              })
-            ) : (
-              <div className="glass-card p-6 text-center">
-                <Clock3 className="mx-auto h-10 w-10 text-slate-300" />
-                <p className="mt-4 text-lg font-semibold text-white">No pending requests</p>
-                <p className="mt-2 text-sm leading-7 text-slate-400">
-                  If you keep a request pending, it will stay here until you accept it.
-                </p>
-              </div>
-            )}
           </div>
         </div>
 
         <aside className="space-y-6">
           <div className="glass-card p-5 sm:p-6">
-            <div className="flex items-center gap-2 text-cyan-200">
-              <SendHorizontal className="h-5 w-5" />
-              <div>
-                <h2 className="text-xl font-semibold text-white">Sent requests</h2>
-                <p className="mt-1 text-sm text-slate-400">Requests you already sent to other members.</p>
-              </div>
-            </div>
+            <SectionHeader
+              icon={SendHorizontal}
+              title="Sent requests"
+              copy="Requests you already sent to other members."
+              countLabel={`${sentRequests.length} outgoing`}
+            />
 
-            <div className="mt-5 space-y-4">
+            <div className="mt-5 space-y-4 2xl:max-h-[520px] 2xl:overflow-y-auto 2xl:pr-1 2xl:hide-scrollbar">
               {sentRequests.length ? (
                 sentRequests.map((match) => <CompactMatchCard key={match.id} match={match} />)
               ) : (
@@ -385,15 +427,14 @@ export default function Requests() {
           </div>
 
           <div className="glass-card p-5 sm:p-6">
-            <div className="flex items-center gap-2 text-cyan-200">
-              <CheckCircle2 className="h-5 w-5" />
-              <div>
-                <h2 className="text-xl font-semibold text-white">Active swaps</h2>
-                <p className="mt-1 text-sm text-slate-400">Accepted requests that are ready for conversation.</p>
-              </div>
-            </div>
+            <SectionHeader
+              icon={CheckCircle2}
+              title="Active swaps"
+              copy="Accepted requests that are ready for conversation."
+              countLabel={`${activeSwaps.length} active`}
+            />
 
-            <div className="mt-5 space-y-4">
+            <div className="mt-5 space-y-4 2xl:max-h-[520px] 2xl:overflow-y-auto 2xl:pr-1 2xl:hide-scrollbar">
               {activeSwaps.length ? (
                 activeSwaps.map((match) => (
                   <CompactMatchCard key={match.id} match={match} ctaLabel="Open chat" ctaTo="/chat" />

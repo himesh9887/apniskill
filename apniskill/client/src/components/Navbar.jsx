@@ -2,7 +2,6 @@ import { createElement, useMemo, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   ArrowRightLeft,
-  BadgeCheck,
   CircleUserRound,
   Home,
   LayoutDashboard,
@@ -24,7 +23,9 @@ function NavItem({ to, label, icon: Icon, onClick, badgeCount = 0 }) {
       onClick={onClick}
       className={({ isActive }) =>
         `flex items-center justify-between gap-3 rounded-full px-4 py-2.5 text-sm font-medium transition ${
-          isActive ? 'bg-white text-slate-950 shadow-lg' : 'text-slate-200 hover:bg-white/10 hover:text-white'
+          isActive
+            ? 'border border-cyan-300/20 bg-cyan-300/12 text-white shadow-[0_10px_28px_rgba(34,211,238,0.12)]'
+            : 'text-slate-200 hover:bg-white/10 hover:text-white'
         }`
       }
     >
@@ -37,7 +38,7 @@ function NavItem({ to, label, icon: Icon, onClick, badgeCount = 0 }) {
           {badgeCount ? (
             <span
               className={`inline-flex min-h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${
-                isActive ? 'bg-slate-950 text-white' : 'bg-amber-300 text-slate-950'
+                isActive ? 'bg-white/12 text-white' : 'bg-amber-300 text-slate-950'
               }`}
             >
               {badgeCount > 9 ? '9+' : badgeCount}
@@ -49,6 +50,18 @@ function NavItem({ to, label, icon: Icon, onClick, badgeCount = 0 }) {
   );
 }
 
+function getRouteMeta(pathname) {
+  const routeMap = {
+    '/': { label: 'Home', icon: Home },
+    '/dashboard': { label: 'Dashboard', icon: LayoutDashboard },
+    '/profile': { label: 'Profile', icon: UserCog },
+    '/requests': { label: 'Requests', icon: ArrowRightLeft },
+    '/chat': { label: 'Messages', icon: MessagesSquare },
+  };
+
+  return routeMap[pathname] || routeMap['/'];
+}
+
 export default function Navbar() {
   const MotionDiv = motion.div;
   const [isOpen, setIsOpen] = useState(false);
@@ -57,18 +70,7 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const isChatRoute = location.pathname === '/chat';
-
-  const currentRoute = useMemo(() => {
-    const routeMap = {
-      '/': { label: 'Home', icon: Home },
-      '/dashboard': { label: 'Dashboard', icon: LayoutDashboard },
-      '/profile': { label: 'Profile', icon: UserCog },
-      '/requests': { label: 'Requests', icon: ArrowRightLeft },
-      '/chat': { label: 'Messages', icon: MessagesSquare },
-    };
-
-    return routeMap[location.pathname] || routeMap['/'];
-  }, [location.pathname]);
+  const currentRoute = getRouteMeta(location.pathname);
 
   const visibleLinks = useMemo(() => {
     const links = [{ to: '/', label: 'Home', icon: Home, badgeCount: 0 }];
@@ -92,25 +94,33 @@ export default function Navbar() {
   }
 
   return (
-    <header className={`sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl ${isChatRoute ? 'shadow-[0_16px_40px_rgba(2,6,23,0.28)]' : ''}`}>
-      <div className={`mx-auto flex max-w-7xl items-center justify-between gap-3 ${isChatRoute ? 'px-3 py-2.5 sm:px-5 md:px-6 lg:px-8' : 'px-4 py-3 sm:px-5 md:px-6 lg:px-8'}`}>
-        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+    <header
+      className={`sticky top-0 z-50 border-b border-white/10 bg-slate-950/82 backdrop-blur-xl ${
+        isChatRoute ? 'shadow-[0_16px_40px_rgba(2,6,23,0.28)]' : ''
+      }`}
+    >
+      <div
+        className={`mx-auto flex max-w-7xl items-center justify-between gap-3 ${
+          isChatRoute ? 'px-3 py-2.5 sm:px-5 md:px-6 lg:px-8' : 'px-4 py-3 sm:px-5 md:px-6 lg:px-8'
+        }`}
+      >
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <Link to="/" className="flex min-w-0 items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 via-sky-300 to-amber-200 text-slate-950 shadow-[0_14px_36px_rgba(34,211,238,0.22)] sm:h-11 sm:w-11">
               <span className="text-base font-black sm:text-lg">AS</span>
             </div>
             <div className="min-w-0">
               <p className="truncate text-base font-semibold tracking-wide text-white sm:text-lg">ApniSkill</p>
-              <p className={`text-xs text-slate-400 ${isChatRoute ? 'hidden lg:block' : 'hidden sm:block'}`}>
-                {isChatRoute ? 'Focused messaging workspace' : 'Skill exchange, redesigned for every screen'}
+              <p className="hidden text-xs text-slate-400 md:block">
+                {isChatRoute ? 'Focused chat workspace' : 'Clean skill exchange platform'}
               </p>
             </div>
           </Link>
 
           {isAuthenticated ? (
-            <div className={`info-chip ${isChatRoute ? 'inline-flex' : 'hidden md:inline-flex lg:hidden'}`}>
-              {createElement(currentRoute.icon, { className: 'h-4 w-4 text-cyan-200' })}
-              <span>{currentRoute.label}</span>
+            <div className="hidden min-w-0 items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-2 text-xs font-medium text-slate-200 md:inline-flex lg:hidden">
+              {createElement(currentRoute.icon, { className: 'h-4 w-4 shrink-0 text-cyan-200' })}
+              <span className="truncate">{currentRoute.label}</span>
             </div>
           ) : null}
         </div>
@@ -124,14 +134,14 @@ export default function Navbar() {
         <div className="hidden items-center gap-3 lg:flex">
           {isAuthenticated ? (
             <>
-              <div className="panel-card flex items-center gap-3 rounded-full px-3 py-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-300/12 text-cyan-200">
+              <div className="panel-card flex max-w-[280px] items-center gap-3 rounded-full px-3 py-2">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-300/12 text-cyan-200">
                   <CircleUserRound className="h-5 w-5" />
                 </div>
-                <div className="leading-tight">
-                  <p className="text-sm font-medium text-white">{user?.name}</p>
-                  <p className="text-xs text-slate-400">
-                    {incomingRequests.length} requests, {unreadMessages.length} unread
+                <div className="min-w-0 leading-tight">
+                  <p className="truncate text-sm font-medium text-white">{user?.name}</p>
+                  <p className="truncate text-xs text-slate-400">
+                    {incomingRequests.length} requests, {unreadMessages.length} unread chats
                   </p>
                 </div>
               </div>
@@ -154,16 +164,20 @@ export default function Navbar() {
 
         <div className="flex items-center gap-2 lg:hidden">
           {isAuthenticated ? (
-            <div className={`info-chip ${isChatRoute ? 'inline-flex max-w-[42vw]' : 'hidden sm:inline-flex'}`}>
-              {createElement(currentRoute.icon, { className: 'h-4 w-4 text-cyan-200' })}
-              <span className="truncate">{isChatRoute ? `${unreadMessages.length} unread` : user?.name?.split(' ')[0]}</span>
+            <div className="hidden max-w-[38vw] items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-2 text-xs font-medium text-slate-200 sm:inline-flex">
+              {createElement(currentRoute.icon, { className: 'h-4 w-4 shrink-0 text-cyan-200' })}
+              <span className="truncate">
+                {isChatRoute ? `${unreadMessages.length} unread` : currentRoute.label}
+              </span>
             </div>
           ) : null}
 
           <button
             type="button"
             onClick={() => setIsOpen((value) => !value)}
-            className={`inline-flex shrink-0 rounded-2xl border border-white/10 bg-white/[0.05] text-white ${isChatRoute ? 'p-2.5' : 'p-3'}`}
+            className={`inline-flex shrink-0 rounded-2xl border border-white/10 bg-white/[0.05] text-white ${
+              isChatRoute ? 'p-2.5' : 'p-3'
+            }`}
             aria-label="Toggle navigation"
           >
             {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
